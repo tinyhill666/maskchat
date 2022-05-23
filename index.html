@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <meta charset='utf-8'>
+    <meta http-equiv='X-UA-Compatible' content='IE=edge'>
+    <title>Mask Chat</title>
+    <meta name='viewport' content='width=device-width, initial-scale=1'>
+    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.slim.min.js"></script>
+    <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
+    <!-- <script src='main.js'></script> -->
+    <!-- need cut -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script>
+        var getUrlParameter = function getUrlParameter(sParam) {
+            var sPageURL = window.location.search.substring(1),
+                sURLVariables = sPageURL.split('&'),
+                sParameterName,
+                i;
+
+            for (i = 0; i < sURLVariables.length; i++) {
+                sParameterName = sURLVariables[i].split('=');
+
+                if (sParameterName[0] === sParam) {
+                    return sParameterName[1] === undefined ? true : decodeURIComponent(sParameterName[1]);
+                }
+            }
+            return false;
+        };
+        function copyToClipboard(element) {
+            var $temp = $("<input>");
+            $("body").append($temp);
+            $temp.val($(element).text()).select();
+            document.execCommand("copy");
+            $temp.remove();
+        }
+
+        
+        $(document).ready(function () {
+            $("#info").hide();
+            var password = "vMRjpNdh9PQxEUHTKk3"
+            var receiveMask = getUrlParameter('mask');
+            console.log(receiveMask)
+            var decrypt = CryptoJS.AES.decrypt(receiveMask, password);
+            console.log(decrypt.toString(CryptoJS.enc.Utf8))
+            $("#receive").text(decrypt.toString(CryptoJS.enc.Utf8))
+
+            $("button#doEncrypt").click(function () {
+
+                console.log()
+                var raw = $("#raw")[0].value
+                var encrypt = CryptoJS.AES.encrypt(raw, password).toString();
+                console.log(encrypt)
+                var maskURL = window.location.protocol + "//" + window.location.host + "/?mask=" + encodeURIComponent(encrypt)
+                console.log(maskURL)
+                $("#mask").text(maskURL)
+                copyToClipboard("#mask")
+                $("#info").show();//显示div
+                // alert("已经复制")
+                // $("#mask").attr("href", "http://" + window.location.host + "?mask=" + encodeURIComponent(mask1));
+            });
+            // $("button#copy").click(function () {
+            //     copyToClipboard("#mask")
+            // });
+        });
+    </script>
+</head>
+
+<body>
+    <h1>Mask Chat</h1>
+    <h4>收到消息</h4>
+    <p id="receive"></p>
+    <h4>回复消息</h4>
+    <div>
+        <textarea id="raw" rows="5" cols="30"></textarea>
+    </div>
+    <div>
+        <button id="doEncrypt" type="button">加密回复</button>
+    </div>
+    <div id="info">
+        <h4>密文已复制</h4>
+        <div id="mask"></div>
+    </div>
+
+</body>
+
+</html>
