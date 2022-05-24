@@ -11,7 +11,121 @@
     <!-- <script src='main.js'></script> -->
     <!-- need cut -->
     <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script src="https://cdn.bootcdn.net/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/elliptic/6.5.4/elliptic.js"></script> -->
     <script>
+
+        $(document).ready(function () {
+
+            var sessionId = getUrlParameter('session');
+            if (sessionId) {
+                $("#session").text("会话编号：" + sessionId)
+            }
+
+            var public1 = getUrlParameter('public1');
+            var public2 = getUrlParameter('public2');
+            var receiveMask = getUrlParameter('mask');
+
+            if (!sessionId) {
+                // start session
+                $("#setup").show();
+
+            } else if (public1) {
+                var ec = new elliptic.ec('curve25519');
+
+                $("#status").text("状态：接受加密会话邀请")
+                var key2 = ec.genKeyPair();
+                var publicKeyStr2 = elliptic.utils.encode(key2.getPublic()._encode(), 'hex')
+                var shared = key2.derive(ec.keyFromPublic(public1, 'hex').getPublic()).toString('hex');
+
+                var session = JSON.stringify({
+                    shared: shared
+                })
+
+                localStorage.setItem(sessionId, session)
+
+                $("#exchange").show();
+
+            } else if (public2) {
+                var ec = new elliptic.ec('curve25519');
+
+                $("#status").text("状态：开始聊天")
+
+                var sessionItem = JSON.parse(localStorage.getItem(sessionId))
+                var key1 = ec.keyFromPrivate(sessionItem.privateKey1)
+
+                var shared = key1.derive(ec.keyFromPublic(public2, 'hex').getPublic()).toString('hex');
+
+                sessionItem.shared = shared
+
+                localStorage.setItem(sessionId, JSON.stringify(sessionItem))
+
+                $("#chat").show();
+                $("#receiveTitle").hide()
+
+            } else {
+                var sessionItem = JSON.parse(localStorage.getItem(sessionId))
+                if (sessionItem && sessionItem.shared) {
+                    var shared = sessionItem.shared
+                    $("#status").text("状态：聊天中")
+                    $("#chat").show();
+
+                    var decrypt = CryptoJS.AES.decrypt(receiveMask, shared);
+                    $("#receive").text(decrypt.toString(CryptoJS.enc.Utf8))
+                } else {
+                    $("#status").text("状态：错误")
+                    $("#start").text("重启加密会话")
+                    $("#setup").show();
+                }
+
+            }
+
+
+            $("button#start").click(function () {
+
+                sessionId = CryptoJS.lib.WordArray.random(128 / 16).toString();
+
+                var EC = elliptic.ec;
+                var ec = new EC('curve25519');
+
+                // Generate keys
+                var key1 = ec.genKeyPair();
+                const publicKeyStr = elliptic.utils.encode(key1.getPublic()._encode(), 'hex')
+                const privateKeyStr = key1.getPrivate().toString('hex')//elliptic.utils.encode(key1.getPrivate(), 'hex')
+
+                var session = JSON.stringify({
+                    privateKey1: privateKeyStr
+                })
+                localStorage.setItem(sessionId, session)
+
+                var maskURL = "打开加密聊天通道    " + window.location.protocol + "//" + window.location.host + "/?session=" + encodeURIComponent(sessionId) + "&public1=" + encodeURIComponent(publicKeyStr)
+                $("#mask").text(maskURL)
+                copyToClipboard("#mask")
+                $("#info").text("会话邀请已创建，粘贴到聊天")
+
+            });
+
+            $("button#accept").click(function () {
+
+                var maskURL = window.location.protocol + "//" + window.location.host + "/?session=" + encodeURIComponent(sessionId) + "&public2=" + encodeURIComponent(publicKeyStr2)
+                $("#mask").text(maskURL)
+                copyToClipboard("#mask")
+                $("#info").text("已接受邀请，粘贴到聊天")
+
+            });
+
+            $("button#doEncrypt").click(function () {
+                var raw = $("#raw")[0].value
+                var encrypt = CryptoJS.AES.encrypt(raw, shared).toString();
+                var maskURL = window.location.protocol + "//" + window.location.host + "/?session=" + encodeURIComponent(sessionId) + "&mask=" + encodeURIComponent(encrypt)
+                $("#mask").text(maskURL)
+                copyToClipboard("#mask")
+                $("#info").text("密文已复制，粘贴到聊天")
+            });
+
+
+        });
+
         var getUrlParameter = function getUrlParameter(sParam) {
             var sPageURL = window.location.search.substring(1),
                 sURLVariables = sPageURL.split('&'),
@@ -35,52 +149,38 @@
             $temp.remove();
         }
 
-        
-        $(document).ready(function () {
-            $("#info").hide();
-            var password = "vMRjpNdh9PQxEUHTKk3"
-            var receiveMask = getUrlParameter('mask');
-            console.log(receiveMask)
-            var decrypt = CryptoJS.AES.decrypt(receiveMask, password);
-            console.log(decrypt.toString(CryptoJS.enc.Utf8))
-            $("#receive").text(decrypt.toString(CryptoJS.enc.Utf8))
 
-            $("button#doEncrypt").click(function () {
-
-                console.log()
-                var raw = $("#raw")[0].value
-                var encrypt = CryptoJS.AES.encrypt(raw, password).toString();
-                console.log(encrypt)
-                var maskURL = window.location.protocol + "//" + window.location.host + "/?mask=" + encodeURIComponent(encrypt)
-                console.log(maskURL)
-                $("#mask").text(maskURL)
-                copyToClipboard("#mask")
-                $("#info").show();//显示div
-                // alert("已经复制")
-                // $("#mask").attr("href", "http://" + window.location.host + "?mask=" + encodeURIComponent(mask1));
-            });
-            // $("button#copy").click(function () {
-            //     copyToClipboard("#mask")
-            // });
-        });
     </script>
 </head>
 
 <body>
-    <h1>Mask Chat</h1>
-    <h4>收到消息</h4>
-    <p id="receive"></p>
-    <h4>回复消息</h4>
-    <div>
-        <textarea id="raw" rows="5" cols="30"></textarea>
+    <h2>Mask Chat</h2>
+    <p id="status"></p>
+    <p id="session"></p>
+    <div id="setup" style="display:none;">
+        <div>
+            <button id="start" type="button">开启加密会话</button>
+        </div>
     </div>
-    <div>
-        <button id="doEncrypt" type="button">加密回复</button>
+    <div id="exchange" style="display:none;">
+        <div>
+            <button id="accept" type="button">接受会话邀请</button>
+        </div>
     </div>
-    <div id="info">
-        <h4>密文已复制</h4>
-        <div id="mask"></div>
+    <div id="chat" style="display:none;">
+        <h2 id="receiveTitle">收到消息</h2>
+        <p id="receive"></p>
+        <h3>发送消息</h3>
+        <div>
+            <textarea id="raw" rows="5" cols="30"></textarea>
+        </div>
+        <div>
+            <button id="doEncrypt" type="button">加密</button>
+        </div>
     </div>
+
+    <h4 id="info"></h4>
+    <div id="mask"></div>
 
 </body>
 
