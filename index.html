@@ -31,20 +31,26 @@
                 $("#setup").show();
 
             } else if (public1) {
-                var ec = new elliptic.ec('curve25519');
+                var sessionItem = JSON.parse(localStorage.getItem(sessionId))
+                if (sessionItem) {
+                    // exist
+                    $("#status").text("状态：错误")
+                    $("#start").text("重启加密会话")
+                    $("#setup").show();
+                } else {
+                    var ec = new elliptic.ec('curve25519');
 
-                $("#status").text("状态：接受加密会话邀请")
-                var key2 = ec.genKeyPair();
-                var publicKeyStr2 = elliptic.utils.encode(key2.getPublic()._encode(), 'hex')
-                var shared = key2.derive(ec.keyFromPublic(public1, 'hex').getPublic()).toString('hex');
+                    $("#status").text("状态：接受加密会话邀请")
+                    var key2 = ec.genKeyPair();
+                    var publicKeyStr2 = elliptic.utils.encode(key2.getPublic()._encode(), 'hex')
+                    var shared = key2.derive(ec.keyFromPublic(public1, 'hex').getPublic()).toString('hex');
 
-                var session = JSON.stringify({
-                    shared: shared
-                })
+                    localStorage.setItem(sessionId, JSON.stringify({
+                        shared: shared
+                    }))
 
-                localStorage.setItem(sessionId, session)
-
-                $("#exchange").show();
+                    $("#exchange").show();
+                }
 
             } else if (public2) {
                 var ec = new elliptic.ec('curve25519');
@@ -101,7 +107,7 @@
                 var maskURL = "打开加密聊天通道    " + window.location.protocol + "//" + window.location.host + "/?session=" + encodeURIComponent(sessionId) + "&public1=" + encodeURIComponent(publicKeyStr)
                 $("#mask").text(maskURL)
                 copyToClipboard("#mask")
-                $("#info").text("会话邀请已创建，粘贴到聊天")
+                $("#info").text("会话邀请已创建，已自动复制，直接到聊天粘贴")
 
             });
 
@@ -110,7 +116,7 @@
                 var maskURL = window.location.protocol + "//" + window.location.host + "/?session=" + encodeURIComponent(sessionId) + "&public2=" + encodeURIComponent(publicKeyStr2)
                 $("#mask").text(maskURL)
                 copyToClipboard("#mask")
-                $("#info").text("已接受邀请，粘贴到聊天")
+                $("#info").text("已接受邀请，已自动复制，直接到聊天粘贴")
 
             });
 
@@ -120,7 +126,7 @@
                 var maskURL = window.location.protocol + "//" + window.location.host + "/?session=" + encodeURIComponent(sessionId) + "&mask=" + encodeURIComponent(encrypt)
                 $("#mask").text(maskURL)
                 copyToClipboard("#mask")
-                $("#info").text("密文已复制，粘贴到聊天")
+                $("#info").text("已自动复制，直接到聊天粘贴")
             });
 
 
