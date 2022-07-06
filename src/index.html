@@ -4,15 +4,19 @@
 <head>
     <meta charset='utf-8'>
     <meta http-equiv='X-UA-Compatible' content='IE=edge'>
-    <title>Mask Chat</title>
+    <title>Whisper</title>
     <meta name='viewport' content='width=device-width, initial-scale=1'>
-    <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.slim.min.js"></script>
-    <!-- <link rel='stylesheet' type='text/css' media='screen' href='main.css'> -->
-    <!-- <script src='main.js'></script> -->
-    <!-- need cut -->
+
+    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/jquery/3.6.0/jquery.slim.min.js"></script>
     <script src="https://cdn.bootcdn.net/ajax/libs/crypto-js/4.0.0/crypto-js.min.js"></script>
-    <script src="https://cdn.bootcdn.net/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script>
-    <!-- <script src="https://cdn.bootcdn.net/ajax/libs/elliptic/6.5.4/elliptic.js"></script> -->
+    <script src="https://cdn.bootcdn.net/ajax/libs/elliptic/6.5.4/elliptic.min.js"></script> -->
+    <!-- backup -->
+    <script src="https://lf6-cdn-tos.bytecdntp.com/cdn/expire-1-M/jquery/3.6.0/jquery.slim.min.js"></script>
+    <script src="https://lf3-cdn-tos.bytecdntp.com/cdn/expire-1-M/crypto-js/4.0.0/crypto-js.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/elliptic/6.5.4/elliptic.min.js"
+        integrity="sha512-78ON1nQI4R5btOF/cPVb/msINn8P3K6yJ7n29r4J0M4SBLhTDmFqZgNQ7htZM16539xPvQDywpTdJaQPxuXxGw=="
+        crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+
     <script>
 
         $(document).ready(function () {
@@ -160,7 +164,7 @@
 </head>
 
 <body>
-    <h2>Mask Chat</h2>
+    <h2>Whisper</h2>
     <p id="status"></p>
     <p id="session"></p>
     <div id="setup" style="display:none;">
@@ -176,7 +180,7 @@
     <div id="chat" style="display:none;">
         <h2 id="receiveTitle">收到消息</h2>
         <p id="receive"></p>
-        <h3>发送消息</h3>
+        <h2>发送消息</h2>
         <div>
             <textarea id="raw" rows="5" cols="30"></textarea>
         </div>
